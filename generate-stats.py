@@ -8,7 +8,6 @@ Data must contain the following fields:
 (C)2022 Damian Murphy
 """
 import argparse
-import os
 import matplotlib
 import numpy
 import pandas
@@ -68,8 +67,9 @@ def main():
     rate_of_closure = 0
     total_created = 0
     total_resolved = 0
+    roc_4 = 0
     print("==================")
-    print("Week\tCreated\tResolved\tVelocity")
+    print("Week\tNew\tClose\tRoC\t4-Week RoC")
     for index, row in resolved_data.iterrows():
         # Take care here, some weeks can have zero items, so avoid index errors
         try:
@@ -83,20 +83,27 @@ def main():
 
         if numcreated != 0:
             rate_of_closure = round((numresolved / numcreated), 2)
+            roc_4 += rate_of_closure
         else:
             rate_of_closure = 0
 
         total_created += numcreated
         total_resolved += numresolved
 
-        print(index, numcreated, numresolved, rate_of_closure, sep='\t', end='\n')
+        roc_4_res = "-"
+
+        if index % 4 == 0:
+            roc_4_res = roc_4 / 4
+            roc_4 = 0
+
+        print(index, numcreated, numresolved, rate_of_closure, roc_4_res, sep='\t', end='\n')
 
     backlog = total_created - total_resolved
     av_created = round(total_created / len(resolved_data.index), 2)
     av_resolved = round(total_resolved / len(resolved_data.index), 2)
     av_roc = round((total_resolved / total_created), 2)
     est_weeks = 0
-    
+
     if backlog < 0:
         est_weeks = 0
     elif av_created > av_resolved:
@@ -108,6 +115,12 @@ def main():
     print("Total Created:", total_created)
     print("Total Resolved:", total_resolved)
     print("Average Rate of Closure:", av_roc)
+    if av_roc < 1:
+        print("Ticket closure rate is below creation rate, backlog is growing")
+    elif av_roc == 1:
+        print("Ticket closure rate matches creation rate, backlog will not change")
+    else:
+        print("Ticket closure rate is higher than creation rate, backlog will shrink")
     print("Average Items Closed per Week:", av_resolved)
     print("Average Items Created per Week:", av_created)
     print("Weeks to close backlog of", backlog, "items is", est_weeks, "weeks")
