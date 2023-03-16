@@ -13,6 +13,7 @@ import numpy
 import pandas
 import csv
 
+
 def parse_cmdline():
     """
     Parse the command line options:
@@ -56,9 +57,9 @@ def main():
     created_data = csvdatafile[['Created']].groupby(csvdatafile['Created']
                                                     .dt.isocalendar().week).nunique()
 
-    closed_state = ['Closed', 'Declined', 'Awaiting Customer Verification']
+    open_state = ['Unresolved']
 
-    resolved_data = csvdatafile.loc[csvdatafile['Status'].isin(closed_state)]
+    resolved_data = csvdatafile.loc[~csvdatafile['Resolution'].isin(open_state)]
     resolved_data = resolved_data[['Resolved']].groupby(resolved_data['Resolved']
                                             .dt.isocalendar().week).nunique()
 
